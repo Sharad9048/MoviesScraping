@@ -11,7 +11,7 @@ logging.basicConfig(
     filename= "scraping.log"
 )
 
-logging.info(f'ProcessID={os.getpid()}')
+processId = os.getpid()
 
 # This URL will used for navigating to between pages and individual movie details
 baseUrl = 'https://www.themoviedb.org'
@@ -117,10 +117,10 @@ def getMovieDetail(movieSoupData):
             if rating == "NR":
                 rating = 'NA'
         except AttributeError:
-            logging.error(f'rating|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            logging.error(f'{processId}|rating|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
             rating = 'NA'
     except:
-        logging.error(f'rating|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        logging.error(f'{processId}|rating|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
         rating = 'NA'
 
     try:
@@ -131,10 +131,10 @@ def getMovieDetail(movieSoupData):
             # Joining all the genre string with comma seperated string
             genres =','.join(genresList)
         except AttributeError:
-            logging.error(f'genres|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            logging.error(f'{processId}|genres|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
             genres = 'NA'
     except:
-        logging.error(f'genres|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        logging.error(f'{processId}|genres|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
         genres = 'NA'
     
     try:
@@ -143,10 +143,10 @@ def getMovieDetail(movieSoupData):
             # Extraction Runtime data of the movie inside span elemnet of class 'runtime'
             runtime = movieDetailPage.find('span', class_ = 'runtime').text.replace('\n','').strip()
         except AttributeError:
-            logging.error(f'runtime|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            logging.error(f'{processId}|runtime|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
             runtime = 'NA'
     except:
-        logging.error(f'runtime|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        logging.error(f'{processId}|runtime|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
         runtime = 'NA'
     
     try:
@@ -154,10 +154,10 @@ def getMovieDetail(movieSoupData):
             # Extraction overview of the movie inside p tag
             overview = movieDetailPage.find('p').text
         except AttributeError:
-            logging.error(f'overview|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            logging.error(f'{processId}|overview|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
             overview = 'NA'
     except:
-        logging.error(f'overview|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        logging.error(f'{processId}|overview|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
         overview = 'NA'
 
 
@@ -175,10 +175,10 @@ def getMovieDetail(movieSoupData):
                     # Ending the loop since the director detail was found
                     break
         except AttributeError:
-            logging.error(f'director|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            logging.error(f'{processId}|director|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
             director = 'NA'
     except:
-        logging.error(f'director|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        logging.error(f'{processId}|director|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
         director = 'NA'
 
     # Compiling all the collected movie detail into a dictionary
