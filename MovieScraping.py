@@ -7,8 +7,8 @@ import logging, os
 logging.basicConfig(
     level = logging.INFO,       # It will store logs whose severity greater than INFO
     format = "%(asctime)s %(levelname)s %(message)s",       # It is the format in which the logging will b
-    datefmt = "%Y-%m-%d %H:%M:%S",
-    filename= "scraping.log"
+    datefmt = "%Y-%m-%d %H:%M:%S",      # Date format for logger
+    filename= "scraping.log"        # File in which the logs must be stored
 )
 
 # Process ID will be used for storing logs
@@ -28,31 +28,32 @@ def tryRequestingData(url):
     The function will keep requesting data from the website URL until the retries are over
     """
     
-    try:
-        # Getting HTML data from the url
-        sourceData = requests.get(url, headers=header)
-    
-        # Declaring Maximum retries
-        retryCount = 10
+    # Declaring Maximum retries
+    retryCount = 10
 
-        # Checking the status code and re-atempting to get the HTML data
-        while sourceData.status_code != 200:
-            
-            # Checking if number of retries has finished
-            if retryCount <=0:
-                logging.error("Failed to get Response 200 from URL: {url}")
-                raise RuntimeError("No Response 200")
-            else:
-                retry-=1        # Decrementing number of Retries
-        
-            # Re-attempting to get the HTML data
+    # Checking the status code and re-atempting to get the HTML data
+    while retryCount >= 0:
+        try:
+            # Getting HTML data from the url
             sourceData = requests.get(url, headers=header)
 
-    except:
-        logging.error(f"Invalid URL: {url}")
-        raise RuntimeError("Invalid URL")
+            # Checking if number of retries has finished
+            if sourceData.status_code == 200:
+                return sourceData.text      # Decrementing number of Retries
+            else:
+                logging.info(f"{processId}|Status Code is {sourceData.status_code}|Retrying...")
+        
+        except:
+            if retryCount==0:
+                # If retry count is 0 the URL will be invalid, it will be recorded as an error in the log and raise an exception
+                logging.error(f"Invalid URL: {url}")
+                raise RuntimeError("Invalid URL")
+            else:
+                # It will record retrying info in logs until retries are exhausted
+                logging.info(f"{processId}|Retrying...|{url}")
+        finally:
+            retryCount-=1
 
-    return sourceData.text
 
 def getMovieDetail(movieSoupData):
     """
@@ -95,7 +96,10 @@ def getMovieDetail(movieSoupData):
         # Extracting the movie detail HTML page using the path stored above
         movieSourceData = tryRequestingData(baseUrl + moviePath)
     except RuntimeError:
+        # If requesting movie HTML data fails then:
+        # the missing values info will be stored in log file
         logging.info(f'{processId}|rating,genres,runtime,overview,director|movie detail page not found|NA|{movieTitle}|{baseUrl + moviePath}')
+        # the remaining fields will have default value as 'NA'
         movieData = {
             "Title" : movieTitle,
             "Date" : movieDate,
@@ -105,6 +109,7 @@ def getMovieDetail(movieSoupData):
             "Overview" : "NA",
             "Director" : "NA",
         }
+        # returning an incomplete movie data dictionary
         return movieData
 
     # Converting HTML string to BeautifulSoup object
@@ -125,10 +130,14 @@ def getMovieDetail(movieSoupData):
             if rating == "NR":
                 rating = 'NA'
         except AttributeError:
+            # If the element of rating is missing, the info of the missing data will be recorded in the log file
             logging.info(f'{processId}|rating|element not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            # the rating will store 'NA'
             rating = 'NA'
     except:
+        # Any other exception will be recorded as an error
         logging.error(f'{processId}|rating|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        # the rating will store 'NA'
         rating = 'NA'
 
     try:
@@ -139,10 +148,14 @@ def getMovieDetail(movieSoupData):
             # Joining all the genre string with comma seperated string
             genres =','.join(genresList)
         except AttributeError:
+            # If the element of genres is missing, the info of the missing data will be recorded in the log file
             logging.info(f'{processId}|genres|element not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            # the genres will store 'NA'
             genres = 'NA'
     except:
+        # Any other exception will be recorded as an error
         logging.error(f'{processId}|genres|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        # the genres will store 'NA'
         genres = 'NA'
     
     try:
@@ -151,10 +164,14 @@ def getMovieDetail(movieSoupData):
             # Extraction Runtime data of the movie inside span elemnet of class 'runtime'
             runtime = movieDetailPage.find('span', class_ = 'runtime').text.replace('\n','').strip()
         except AttributeError:
+            # If the element of runtime is missing, the info of the missing data will be recorded in the log file
             logging.info(f'{processId}|runtime|element not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            # the runtime will store 'NA'
             runtime = 'NA'
     except:
+        # Any other exception will be recorded as an error
         logging.error(f'{processId}|runtime|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        # the runtime will store 'NA'
         runtime = 'NA'
     
     try:
@@ -162,13 +179,17 @@ def getMovieDetail(movieSoupData):
             # Extraction overview of the movie inside p tag
             overview = movieDetailPage.find('p').text
         except AttributeError:
+            # If the element of overview is missing, the info of the missing data will be recorded in the log file
             logging.info(f'{processId}|overview|element not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            # the overview will store 'NA'
             overview = 'NA'
     except:
+        # Any other exception will be recorded as an error
         logging.error(f'{processId}|overview|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        # the overview will store 'NA'
         overview = 'NA'
 
-
+    director = "NA"
     try:
         try:
             # Running a loop to scan 'Director' string inside a group li tag of class 'profile'
@@ -183,12 +204,16 @@ def getMovieDetail(movieSoupData):
                     # Ending the loop since the director detail was found
                     break
         except AttributeError:
+            # If the element of director is missing, the info of the missing data will be recorded in the log file
             logging.info(f'{processId}|director|data not found|NA|{movieTitle}|{baseUrl + moviePath}')
+            # the director will store 'NA'
             director = 'NA'
     except:
+        # Any other exception will be recorded as an error
         logging.error(f'{processId}|director|operation failed|NA|{movieTitle}|{baseUrl + moviePath}')
+        # the director will store 'NA'
         director = 'NA'
-
+    
     # Compiling all the collected movie detail into a dictionary
     movieData = {
         "Title" : movieTitle,
@@ -213,6 +238,7 @@ def getAllMoviesDetail(url):
         # Getting HTML data from the url
         sourceData = tryRequestingData(url)
     except RuntimeError:
+        # If requesting HTML data fails the function will return an empty list
         return []
     
     # Converting the HTML string data to soup data
