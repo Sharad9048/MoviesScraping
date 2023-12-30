@@ -248,7 +248,7 @@ def getAllMoviesDetail(url):
     movieBlockList = popularMoviesPage.find_all('div',class_='card style_1')
 
     # Using map function to get movie data by passing the function getMovieDetail and list of movieBlock bs4 objects
-    movieDetailList = list(map(getMovieDetail, movieBlockList))
+    movieDetailList = tuple(map(getMovieDetail, movieBlockList))
 
     return movieDetailList
 
